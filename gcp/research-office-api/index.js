@@ -104,17 +104,23 @@ app.post("/drafts", requireVercelCaller, async (req, res) => {
   }
 
   // DECISION: the draft ID comes from the idempotency key, so a retried write
-  // returns the same draft instead of creating a second one.
-  const id = `D-${key.slice(0, 8).toUpperCase()}`;
+  // returns the same draft instead of creating a second one. 16 hex characters
+  // (64 bits) makes an accidental clash between two different drafts negligible.
+  const id = `D-${key.slice(0, 16).toUpperCase()}`;
   const ref = db.collection("drafts").doc(id);
   const draft = { labId, grantId, section, markdown, savedBy: req.caller, savedAt: new Date().toISOString() };
   try {
     await ref.create(draft);
     res.status(201).json({ id, ...draft, duplicate: false });
   } catch (err) {
-    if (err.code === 6) { // ALREADY_EXISTS: this exact write already happened
-      const existing = await ref.get();
-      return res.status(200).json({ id, ...existing.data(), duplicate: true });
+    if (err.code === 6) { // ALREADY_EXISTS: this write may already have happened
+      const existing = (await ref.get()).data();
+      // DECISION: only treat it as a retry if it is the same lab, grant, section, and text.
+      // Anything else is a clash, and we never return another lab's draft.
+      const sameWrite = existing.labId === labId && existing.grantId === grantId &&
+        existing.section === section && existing.markdown === markdown;
+      if (!sameWrite) return res.status(409).json({ error: "idempotency key conflict" });
+      return res.status(200).json({ id, ...existing, duplicate: true });
     }
     throw err;
   }

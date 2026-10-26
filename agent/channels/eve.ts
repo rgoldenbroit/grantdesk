@@ -1,15 +1,34 @@
+import { type AuthFn, localDev, vercelOidc } from "eve/channels/auth";
 import { eveChannel } from "eve/channels/eve";
-import { localDev, placeholderAuth, vercelOidc } from "eve/channels/auth";
+import { readCookie, verifySessionToken } from "../../lib/session";
 
+// Our own authenticator: trusts the signed login cookie set by /login.
+function appSession(): AuthFn<Request> {
+  return async (request) => {
+    const user = await verifySessionToken(readCookie(request.headers.get("cookie")));
+    if (!user) return null; // not ours: let the next authenticator try
+    return {
+      authenticator: "grantdesk",
+      principalId: user.sub,
+      principalType: "user",
+      attributes: {
+        name: user.name,
+        labId: user.labId,
+        labName: user.labName,
+        modelPolicy: user.modelPolicy,
+      },
+    };
+  };
+}
+
+// DECISION: tool stubs (used by evals) are allowed only on a local dev server.
+const devWithStubs: AuthFn<Request> = async (request) => {
+  const caller = await localDev()(request);
+  return caller ? { ...caller, allowToolStubs: true } : null;
+};
+
+// DECISION: replaced placeholderAuth. Order matters: signed-in users first,
+// Vercel-to-Vercel callers second, local dev last.
 export default eveChannel({
-  auth: [
-    // Lets the eve TUI and your Vercel deployments reach the deployed agent.
-    vercelOidc(),
-    // Open on localhost for `eve dev` and the REPL; ignored in production.
-    localDev(),
-    // This placeholder will not allow browser requests in production.
-    // Replace it with your app's auth provider, like Auth.js or Clerk,
-    // or use none() for a public demo.
-    placeholderAuth(),
-  ],
+  auth: [appSession(), vercelOidc(), devWithStubs],
 });

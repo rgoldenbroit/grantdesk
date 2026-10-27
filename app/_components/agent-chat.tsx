@@ -29,7 +29,7 @@ import { StarterPrompts } from "./starter-prompts";
 import type { AppSession } from "@/lib/session";
 import { WEB_CHAT_AGENT } from "@/app/eve-agent";
 
-const DEFAULT_AGENT_NAME = "GrantDesk v2";
+const DEFAULT_AGENT_NAME = "GrantDesk";
 const AGENT_NAME = WEB_CHAT_AGENT ?? DEFAULT_AGENT_NAME;
 
 export function AgentChat({

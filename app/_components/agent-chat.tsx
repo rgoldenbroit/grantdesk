@@ -2,7 +2,7 @@
 
 import type { UserContent } from "ai";
 import { useEveAgent } from "eve/react";
-import { AlertCircleIcon, BrainIcon, PlusIcon, SquareIcon } from "lucide-react";
+import { AlertCircleIcon, BrainIcon, InfoIcon, PlusIcon, SquareIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import {
   Conversation,
@@ -22,18 +22,24 @@ import {
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AboutDemoDialog } from "./about-demo-dialog";
 import { AgentMessage } from "./agent-message";
+import { LogoMark } from "./logo-mark";
+import { StarterPrompts } from "./starter-prompts";
+import type { AppSession } from "@/lib/session";
 import { WEB_CHAT_AGENT } from "@/app/eve-agent";
 
-const DEFAULT_AGENT_NAME = "grantdesk";
+const DEFAULT_AGENT_NAME = "GrantDesk";
 const AGENT_NAME = WEB_CHAT_AGENT ?? DEFAULT_AGENT_NAME;
 
 export function AgentChat({
   sessionId,
   sessionless = false,
+  user,
 }: {
   readonly sessionId?: string;
   readonly sessionless?: boolean;
+  readonly user?: AppSession | null;
 }) {
   const [cancellationError, setCancellationError] = useState<string>();
   const [hasInputText, setHasInputText] = useState(false);
@@ -148,7 +154,7 @@ export function AgentChat({
   return (
     <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       {showConversationLayout ? (
-        <ChatHeader canStartNewChat={activeSessionId !== undefined} />
+        <ChatHeader canStartNewChat={activeSessionId !== undefined} user={user} />
       ) : null}
 
       {showConversationLayout ? (
@@ -199,8 +205,26 @@ export function AgentChat({
         )}
       >
         {showConversationLayout ? null : (
-          <div className="flex flex-col items-center gap-3 text-center">
-            <h1 className="font-medium text-5xl tracking-tighter">{AGENT_NAME}</h1>
+          <div className="flex w-full flex-col items-center gap-6 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center gap-3">
+                <LogoMark className="size-11 text-primary" />
+                <h1 className="font-medium text-5xl tracking-tighter">{AGENT_NAME}</h1>
+              </div>
+              {user ? (
+                <p className="text-muted-foreground text-sm">
+                  {user.name} · {user.labName}
+                  {user.modelPolicy === "vertex-only" ? " · Vertex only" : ""}
+                </p>
+              ) : null}
+              <AboutDemoDialog className="rounded-sm text-primary text-sm underline-offset-4 outline-none hover:underline focus-visible:ring-[3px] focus-visible:ring-ring/50">
+                About this demo
+              </AboutDemoDialog>
+            </div>
+            <StarterPrompts
+              disabled={isResuming}
+              onPick={(prompt) => void handleSubmit({ text: prompt, files: [] })}
+            />
           </div>
         )}
         <div className="w-full">{composer}</div>
@@ -258,11 +282,33 @@ function ErrorMessage({ message }: { readonly message: string }) {
   );
 }
 
-function ChatHeader({ canStartNewChat }: { readonly canStartNewChat: boolean }) {
+function ChatHeader({
+  canStartNewChat,
+  user,
+}: {
+  readonly canStartNewChat: boolean;
+  readonly user?: AppSession | null;
+}) {
   return (
     <header className="pointer-events-none fixed top-0 right-0 left-0 z-20 h-14">
-      <div className="relative mx-auto flex h-full w-full max-w-3xl items-center justify-center bg-background px-24">
-        <span className="truncate text-muted-foreground text-sm">{AGENT_NAME}</span>
+      <div className="relative mx-auto flex h-full w-full max-w-3xl items-center justify-center bg-background px-28">
+        <span className="truncate text-muted-foreground text-sm">
+          {AGENT_NAME}
+          {user ? ` · ${user.labName}` : ""}
+          {user?.modelPolicy === "vertex-only" ? " · Vertex only" : ""}
+        </span>
+        <div className="pointer-events-auto fixed top-4 left-6 flex items-center gap-3 text-muted-foreground text-sm md:gap-4">
+          {user ? (
+            <a className="hover:text-foreground" href="/logout">
+              Sign out
+            </a>
+          ) : null}
+          {/* Icon below md: the full label would overlap the centered title on phones. */}
+          <AboutDemoDialog className="flex items-center rounded-sm outline-none hover:text-foreground focus-visible:ring-[3px] focus-visible:ring-ring/50">
+            <InfoIcon aria-hidden="true" className="size-4 md:hidden" />
+            <span className="sr-only md:not-sr-only">About this demo</span>
+          </AboutDemoDialog>
+        </div>
         {canStartNewChat ? (
           <Button
             aria-label="Start a new chat"

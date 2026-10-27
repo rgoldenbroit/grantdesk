@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { LogoMark } from "@/app/_components/logo-mark";
 import { login, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -13,7 +14,10 @@ export default function LoginPage() {
     <main className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-1 text-center">
-          <h1 className="font-medium text-3xl tracking-tight">GrantDesk</h1>
+          <div className="flex items-center justify-center gap-2.5">
+            <LogoMark className="size-8 text-primary" />
+            <h1 className="font-medium text-3xl tracking-tight">GrantDesk</h1>
+          </div>
           <p className="text-muted-foreground text-sm">Eastbrook University · Office of Research</p>
         </div>
         <form action={formAction} className="space-y-3">

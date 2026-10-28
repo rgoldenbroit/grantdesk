@@ -1,6 +1,6 @@
 import { defineAgent, defineDynamic } from "eve";
 
-const PRIMARY_MODEL = "google/gemini-3.7-flash"; // confirm the ID at vercel.com/ai-gateway/models
+const PRIMARY_MODEL = "google/gemini-3.7-flash"; // checked against AI Gateway's model list, Oct 2026
 const FALLBACK_MODEL = "anthropic/claude-sonnet-5.5";
 
 const POLICIES = {

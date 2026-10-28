@@ -31,8 +31,8 @@ flowchart LR
     nextApp["Next.js app<br/>login + chat"]
     agent["eve agent"]
     tools["Tools<br/>get_lab_profile<br/>list_active_grants<br/>save_draft"]
-    pubmedTool["search_pubmed tool"]
     gateway["AI Gateway"]
+    pubmedTool["search_pubmed tool"]
   end
 
   subgraph gcp["On Google Cloud"]
@@ -41,14 +41,14 @@ flowchart LR
     vertex["Vertex AI<br/>Gemini"]
   end
 
-  anthropic["Anthropic<br/>fallback"]
+  anthropic["Anthropic"]
   pubmed["PubMed"]
 
   browser --> nextApp --> agent
   agent --> tools -->|"short-lived Vercel token"| api --> firestore
-  agent --> pubmedTool --> pubmed
   agent --> gateway -->|first| vertex
   gateway -.->|fallback| anthropic
+  agent --> pubmedTool --> pubmed
 ```
 
 - Anthropic and PubMed sit outside both clouds.

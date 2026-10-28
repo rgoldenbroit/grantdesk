@@ -6,6 +6,8 @@ GrantDesk is a grant-writing agent for the Office of Research at Eastbrook Unive
 
 Demo: https://grantdesk-one.vercel.app/
 
+Proposal (problem, architecture, rollout plan, success measures, risks, and platform feedback): https://grantdesk-one.vercel.app/proposal
+
 | Demo email | Lab |
 | --- | --- |
 | `pi.protein@eastbrook.edu` | Protein Design Lab |
